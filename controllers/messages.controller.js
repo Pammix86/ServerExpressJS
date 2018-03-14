@@ -3,7 +3,7 @@
 var config = require('config.json');
 var express = require('express');
 var router = express.Router();
-var service = require('services/product-types.service');
+var service = require('services/messages.service');
 
 // routes
 router.get('/init', init);
@@ -28,7 +28,18 @@ function init() {
 function getAll(req, res, next) {
     service.getAll()
         .then(function (items) {
-            res.json(items);
+            // check asList
+            if (req.query.asList) {
+                res.json(items.map(function (item) {
+                    return {
+                        _id: item._id,
+                        label: item._id,
+                        value: item._id
+                    };
+                }))
+            } else {
+                res.json(items);
+            }
         })
         .catch(function (err) {
             next(err);

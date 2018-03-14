@@ -3,7 +3,7 @@
 var config = require('config.json');
 var express = require('express');
 var router = express.Router();
-var service = require('services/product-types.service');
+var service = require('services/matrix.service');
 
 // routes
 router.get('/init', init);

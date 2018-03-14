@@ -1,5 +1,5 @@
 ﻿var config = require('config.json');
-const repository = 'actions';
+const repository = 'messages';
 
 var _ = require('lodash');
 var jwt = require('jsonwebtoken');

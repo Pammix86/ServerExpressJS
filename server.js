@@ -15,18 +15,19 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 
 // use JWT auth to secure the api, the token can be passed in the authorization header or querystring
+function jwtGetTokenCallback(req) {
+    if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+        return req.headers.authorization.split(' ')[1];
+    } else if (req.query && req.query.token) {
+        return req.query.token;
+    }
+    return null;
+}
 app.use(expressJwt({
     secret: config.secret,
-    getToken: function (req) {
-        if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-            return req.headers.authorization.split(' ')[1];
-        } else if (req.query && req.query.token) {
-            return req.query.token;
-        }
-        return null;
-    }
+    getToken: jwtGetTokenCallback
 }).unless({
-    path: ['/login', '/sign-up', '/logout']
+    path: ['/login', '/sign-up', '/logout', '/users']
 }));
 
 // routes

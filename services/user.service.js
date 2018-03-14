@@ -4,7 +4,9 @@ var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
 var Q = require('q');
 var mongo = require('mongoskin');
-var db = mongo.db(config.connectionString, { native_parser: true });
+var db = mongo.db(config.connectionString, {
+    native_parser: true
+});
 db.bind('users');
 
 var service = {};
@@ -21,7 +23,9 @@ module.exports = service;
 function authenticate(username, password) {
     var deferred = Q.defer();
 
-    db.users.findOne({ username: username }, function (err, user) {
+    db.users.findOne({
+        username: username
+    }, function (err, user) {
         if (err) deferred.reject(err.name + ': ' + err.message);
 
         if (user && bcrypt.compareSync(password, user.hash)) {
@@ -31,7 +35,9 @@ function authenticate(username, password) {
                 username: user.username,
                 firstName: user.firstName,
                 lastName: user.lastName,
-                token: jwt.sign({ sub: user._id }, config.secret)
+                token: jwt.sign({
+                    sub: user._id
+                }, config.secret)
             });
         } else {
             // authentication failed
@@ -77,36 +83,36 @@ function getById(_id) {
     return deferred.promise;
 }
 
-function create(userParam) {
+function create(user) {
     var deferred = Q.defer();
-
     // validation
-    db.users.findOne(
-        { username: userParam.username },
-        function (err, user) {
+    db.users.findOne({
+            username: user.username
+        },
+        function (err, _user) {
             if (err) deferred.reject(err.name + ': ' + err.message);
-
-            if (user) {
+            if (_user) {
                 // username already exists
-                deferred.reject('Username "' + userParam.username + '" is already taken');
+                deferred.reject('Username "' + user.username + '" is already taken');
             } else {
                 createUser();
             }
-        });
+        }
+    );
 
     function createUser() {
-        // set user object to userParam without the cleartext password
-        var user = _.omit(userParam, 'password');
+        // set user object to user without the cleartext password
+        var _user = _.omit(user, 'password');
 
         // add hashed password to user object
-        user.hash = bcrypt.hashSync(userParam.password, 10);
+        _user.hash = bcrypt.hashSync(user.password, 10);
 
         db.users.insert(
-            user,
+            _user,
             function (err, doc) {
-                if (err) deferred.reject(err.name + ': ' + err.message);
-
-                deferred.resolve();
+                if (err) return deferred.reject(err.name + ': ' + err.message);
+                user._id = doc._id;
+                deferred.resolve(user);
             });
     }
 
@@ -122,8 +128,9 @@ function update(_id, userParam) {
 
         if (user.username !== userParam.username) {
             // username has changed so check if the new username is already taken
-            db.users.findOne(
-                { username: userParam.username },
+            db.users.findOne({
+                    username: userParam.username
+                },
                 function (err, user) {
                     if (err) deferred.reject(err.name + ': ' + err.message);
 
@@ -152,9 +159,11 @@ function update(_id, userParam) {
             set.hash = bcrypt.hashSync(userParam.password, 10);
         }
 
-        db.users.update(
-            { _id: mongo.helper.toObjectID(_id) },
-            { $set: set },
+        db.users.update({
+                _id: mongo.helper.toObjectID(_id)
+            }, {
+                $set: set
+            },
             function (err, doc) {
                 if (err) deferred.reject(err.name + ': ' + err.message);
 
@@ -168,8 +177,9 @@ function update(_id, userParam) {
 function _delete(_id) {
     var deferred = Q.defer();
 
-    db.users.remove(
-        { _id: mongo.helper.toObjectID(_id) },
+    db.users.remove({
+            _id: mongo.helper.toObjectID(_id)
+        },
         function (err) {
             if (err) deferred.reject(err.name + ': ' + err.message);
 

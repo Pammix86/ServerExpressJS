@@ -6,6 +6,7 @@ var router = express.Router();
 var service = require('services/meta-offers.service');
 
 // routes
+router.get('/init', init);
 router.get('/', getAll);
 router.post('/', create);
 router.get('/:_id', getCurrent);
@@ -14,10 +15,31 @@ router.delete('/:_id', _delete);
 
 module.exports = router;
 
+function init() {
+    service.init()
+        .then(function (items) {
+            res.json(items);
+        })
+        .catch(function (err) {
+            next(err);
+        });
+}
+
 function getAll(req, res, next) {
     service.getAll()
         .then(function (items) {
-            res.json(items);
+            // check asList
+            if (req.query.asList) {
+                res.json(items.map(function (item) {
+                    return {
+                        _id: item._id,
+                        label: item.name,
+                        value: item._id
+                    };
+                }))
+            } else {
+                res.json(items);
+            }
         })
         .catch(function (err) {
             next(err);

@@ -3,7 +3,7 @@
 var config = require('config.json');
 var express = require('express');
 var router = express.Router();
-var service = require('services/product-types.service');
+var service = require('services/coverages.service');
 
 // routes
 router.get('/init', init);
@@ -28,7 +28,14 @@ function init() {
 function getAll(req, res, next) {
     service.getAll()
         .then(function (items) {
-            res.json(items);
+            // filter by type, if any
+            if (req.query.type) {
+                res.json(items.filter(function (item) {
+                    return item.type == req.query.type;
+                }));
+            } else {
+                res.json(items);
+            }
         })
         .catch(function (err) {
             next(err);

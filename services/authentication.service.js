@@ -30,14 +30,19 @@ function authenticate(authRequest) {
 
         if (user && bcrypt.compareSync(password, user.hash)) {
             // authentication successful
-            deferred.resolve({
+            const _user = {
                 _id: user._id,
                 username: user.username,
                 firstName: user.firstName,
                 lastName: user.lastName,
-                token: jwt.sign({
-                    sub: user._id
-                }, config.secret)
+            };
+            deferred.resolve({
+                token: jwt.sign(
+                    _user,
+                    config.secret, {
+                        subject: user._id,
+                    }
+                )
             });
         } else {
             // authentication failed
@@ -49,7 +54,7 @@ function authenticate(authRequest) {
 }
 
 function logout(authRequest) {
-    // TODO
+    // TODO, per ora effettuiamo sempre il log-out
     return Q.resolve(true);
 }
 

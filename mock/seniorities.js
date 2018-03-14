@@ -1,16 +1,13 @@
 module.exports = [{
-        _id: 1,
         label: 'AL',
-        value: '1',
+        value: 'AL',
     },
     {
-        _id: 2,
         label: 'MNP',
-        value: '2',
+        value: 'MNP',
     },
     {
-        _id: 3,
         label: 'MARGE',
-        value: '3',
+        value: 'MARGE',
     }
 ];
