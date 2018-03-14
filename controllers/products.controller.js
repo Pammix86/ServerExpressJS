@@ -49,8 +49,8 @@ function getAll(req, res, next) {
                 res.json(items.map(function (item) {
                     return {
                         _id: item._id,
-                        label: item.name,
-                        value: item._id
+                        name: item.name,
+                        description: item.description
                     };
                 }))
             } else {

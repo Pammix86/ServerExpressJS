@@ -98,8 +98,7 @@ function update(_id, item) {
 
 function _delete(_id) {
     const q = Q.defer();
-    item._id = _id;
-    db[repository].deleteById(_id, function (err) {
+    db[repository].removeById(_id, function (err) {
         if (err) q.reject('Error');
         else q.resolve(true);
     })

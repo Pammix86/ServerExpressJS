@@ -3,7 +3,7 @@
 var config = require('config.json');
 var express = require('express');
 var router = express.Router();
-var service = require('services/meta-offers.service');
+var service = require('services/packages.service');
 
 // routes
 router.get('/init', init);
@@ -26,20 +26,13 @@ function init() {
 }
 
 function getAll(req, res, next) {
-    service.getAll()
+    const filters = {};
+    if (req.query.productId) {
+        filters.productId = req.query.productId;
+    }
+    service.getAll(filters)
         .then(function (items) {
-            // check asList
-            if (req.query.asList) {
-                res.json(items.map(function (item) {
-                    return {
-                        _id: item._id,
-                        name: item.name,
-                        description: item.description
-                    };
-                }))
-            } else {
-                res.json(items);
-            }
+            res.json(items);
         })
         .catch(function (err) {
             next(err);
