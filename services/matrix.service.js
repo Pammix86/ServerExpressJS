@@ -9,13 +9,24 @@ var mongo = require('mongoskin');
 var db = mongo.db(config.connectionString, {
     native_parser: true
 });
-db.bind(repository);
+
+const repo = db.bind(repository);
+repo.bind({
+    findAndUpdateById: function (id, update, callback) {
+        return this.findOneAndUpdate({
+            _id: mongo.helper.toObjectID(id)
+        }, {
+            $set: update
+        }, {
+            returnOriginal: false
+        }, callback);
+    }
+});
+
 /** dati di Mock */
 const bootstrapData = require('../mock/' + repository);
 
 var service = {};
-
-
 
 function initData() {
     // validation
@@ -41,9 +52,9 @@ service.delete = _delete;
 
 module.exports = service;
 
-function getAll() {
+function getAll(filters) {
     const q = Q.defer();
-    db[repository].find().toArray(function (err, items) {
+    db[repository].find(filters || {}).toArray(function (err, items) {
         if (err) q.reject('Not Found');
         else q.resolve(items);
     });
@@ -75,18 +86,19 @@ function create(item) {
 
 function update(_id, item) {
     const q = Q.defer();
-    item._id = _id;
-    db[repository].updateById(_id, item, function (err) {
-        if (err) q.reject('Error');
-        else q.resolve(item);
-    })
+    delete item._id;
+    db[repository].findAndUpdateById(_id, item,
+        function (err, res) {
+            if (err) q.reject('Error');
+            else q.resolve(res.value);
+        }
+    );
     return q.promise;
 }
 
 function _delete(_id) {
     const q = Q.defer();
-    item._id = _id;
-    db[repository].deleteById(_id, function (err) {
+    db[repository].removeById(_id, function (err) {
         if (err) q.reject('Error');
         else q.resolve(true);
     })
