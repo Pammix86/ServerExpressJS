@@ -6,6 +6,9 @@
         "type": "git",
         "url": "https://github.com/cornflourblue/mean-angular2-registration-login-example.git"
     },
+    "scripts": {
+        "debug": "node --inspect server.js"
+    },
     "dependencies": {
         "bcryptjs": "^2.1.0",
         "body-parser": "^1.13.2",
