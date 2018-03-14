@@ -12,13 +12,13 @@ router.delete('/:_id', _delete);
 
 module.exports = router;
 
-function register(req, res) {
+function register(req, res, next) {
     userService.create(req.body)
-        .then(function () {
-            res.sendStatus(200);
+        .then(function (user) {
+            res.json(user);
         })
         .catch(function (err) {
-            res.status(400).send(err);
+            next(err);
         });
 }
 

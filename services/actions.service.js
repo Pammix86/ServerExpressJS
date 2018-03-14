@@ -15,23 +15,24 @@ const bootstrapData = require('../mock/' + repository);
 
 var service = {};
 
+
+
 function initData() {
     // validation
     const q = Q.defer();
-    db[repository].find().toArray(function (err, items) {
-        if (err || items.length == 0) {
-            // Insert bootstrapData
-            db[repository].insert(bootstrapData, function (err) {
-                if (err) q.resolve([]);
-                else q.resolve(bootstrapData);
-            });
-        } else {
-            q.resolve(items);
-        }
-    });
+    // 1) Drop collection Insert bootstrapData
+    db[repository].drop(null, function (err) {
+        if (err) q.reject('Drop error');
+        // 2) inset mock data
+        db[repository].insertMany(bootstrapData, function (err, res) {
+            if (err) q.reject('Init error');
+            else q.resolve(res.ops);
+        });
+    })
     return q.promise;
 }
 
+service.init = initData;
 service.getAll = getAll;
 service.getById = getById;
 service.create = create;
@@ -41,7 +42,12 @@ service.delete = _delete;
 module.exports = service;
 
 function getAll() {
-    return initData();
+    const q = Q.defer();
+    db[repository].find().toArray(function (err, items) {
+        if (err) q.reject('Not Found');
+        else q.resolve(items);
+    });
+    return q.promise;
 }
 
 function getById(_id) {

@@ -3,7 +3,7 @@
 var config = require('config.json');
 var express = require('express');
 var router = express.Router();
-var service = require('services/products.service');
+var service = require('services/messages.service');
 
 // routes
 router.get('/init', init);
@@ -26,30 +26,14 @@ function init() {
 }
 
 function getAll(req, res, next) {
-    const filters = Object.assign({}, req.query);
-    //check delle seniority
-    if (filters.seniorityConstraint instanceof Array && filters.seniorityConstraint.length > 0) {
-        filters.seniorityConstraint = {
-            $in: filters.seniorityConstraint
-        };
-    }
-    //check del livello
-    if (filters.level) {
-        //query per il parent
-        filters.parentIds = {
-            $all: [filters.parentId]
-        };
-    }
-    delete filters.parentId;
-    delete filters.asList;
-
-    service.getAll(filters)
+    service.getAll()
         .then(function (items) {
+            // check asList
             if (req.query.asList) {
                 res.json(items.map(function (item) {
                     return {
                         _id: item._id,
-                        label: item.name,
+                        label: item._id,
                         value: item._id
                     };
                 }))

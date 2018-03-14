@@ -6,6 +6,7 @@ var router = express.Router();
 var service = require('services/product-types.service');
 
 // routes
+router.get('/init', init);
 router.get('/', getAll);
 router.post('/', create);
 router.get('/:_id', getCurrent);
@@ -13,6 +14,16 @@ router.put('/:_id', update);
 router.delete('/:_id', _delete);
 
 module.exports = router;
+
+function init() {
+    service.init()
+        .then(function (items) {
+            res.json(items);
+        })
+        .catch(function (err) {
+            next(err);
+        });
+}
 
 function getAll(req, res, next) {
     service.getAll()
