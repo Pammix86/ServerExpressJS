@@ -5,9 +5,5 @@ module.exports = [{
     {
         label: 'Mobile',
         value: 'Mobile',
-    },
-    {
-        label: 'Convergente',
-        value: 'Convergente',
     }
 ];
