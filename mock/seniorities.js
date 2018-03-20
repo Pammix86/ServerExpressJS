@@ -7,7 +7,7 @@ module.exports = [{
         value: 'MNP',
     },
     {
-        label: 'MARGE',
-        value: 'MARGE',
+        label: 'CB',
+        value: 'CB',
     }
 ];

@@ -1,5 +1,5 @@
 ﻿const Errors = require('models/Errors');
-
+const _ = require('lodash');
 var config = require('config.json');
 var express = require('express');
 var router = express.Router();
@@ -26,9 +26,17 @@ function init() {
 }
 
 function getAll(req, res, next) {
-    service.getAll()
+    const filters = Object.assign({}, req.query);
+    //check delle seniority
+    service.getAll(filters)
         .then(function (items) {
-            res.json(items);
+            if (filters.idMO) {
+                res.json(items);
+            } else {
+                res.json(items.map(function (o) {
+                    return _.omit(o, '_id');
+                }));
+            }
         })
         .catch(function (err) {
             next(err);
@@ -60,10 +68,28 @@ function update(req, res, next) {
 }
 
 function create(req, res, next) {
+    // 1) verifichiamo che non ci siano delle matrici con parametri uguali
+    const filter = {};
+    filter.idMO = req.body.idMO;
+    filter.productL0 = req.body.productL0;
+    filter.coverageBB = req.body.coverageBB;
+    filter.coverageUBB = req.body.coverageUBB;
+    filter.coverageUBBH = req.body.coverageUBBH;
     console.log('create', req.body);
-    service.create(req.body)
-        .then(function (item) {
-            res.json(item);
+    service.getAll(filter)
+        .then(function (items) {
+            if (items && items.length == 0) {
+                // 1) inseriamo la matrice
+                service.create(req.body)
+                    .then(function (item) {
+                        res.json(item);
+                    })
+                    .catch(function (err) {
+                        next(err);
+                    });
+            } else {
+                next("DUPLICATED_VALUES");
+            }
         })
         .catch(function (err) {
             next(err);
