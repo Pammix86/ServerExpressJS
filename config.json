@@ -1,5 +1,17 @@
 ﻿{
+    "connectionStrings": {
+        "SDC": "mongodb://localhost:27017/CCM_SDC",
+        "DBSS": "mongodb://localhost:27017/CCM_DBSS"
+    },
     "connectionString": "mongodb://root:root@ds211289.mlab.com:11289/sdc_db",
     "apiUrl": "http://localhost:4000",
+    "dbssApiHostUrl": "http://10.13.254.245:1313",
+    "dbssApiBaseUrl": "/REST",
+    "dbssApiHeaders": {
+        "messageID": "adf65b20-5b7d-4d18-9b9a-067fcaccd84d",
+        "transactionID": "7b82a3a6-d758-456f-bcc4-7f269e6a2132",
+        "sourceSystem": "WEB",
+        "businessID": "adf65b20-5b7d-4d18-9b9a-067fcaccd84d"
+    },
     "secret": "REPLACE THIS WITH YOUR OWN SECRET, IT CAN BE ANY STRING"
 }
