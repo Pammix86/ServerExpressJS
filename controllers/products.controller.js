@@ -27,21 +27,6 @@ function init() {
 
 function getAll(req, res, next) {
     const filters = Object.assign({}, req.query);
-    //check delle seniority
-    if (filters.seniorityConstraint instanceof Array && filters.seniorityConstraint.length > 0) {
-        filters.seniorityConstraint = {
-            $in: filters.seniorityConstraint
-        };
-    }
-    //check del livello
-    if (filters.level) {
-        //query per il parent
-        filters.parentIds = {
-            $all: [filters.parentId]
-        };
-    }
-    delete filters.parentId;
-    delete filters.asList;
 
     service.getAll(filters)
         .then(function (items) {

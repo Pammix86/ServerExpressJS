@@ -6,15 +6,70 @@ var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
 var Q = require('q');
 var mongo = require('mongoskin');
-var db = mongo.db(config.connectionString, {
+var db = mongo.db(config.connectionStrings.SDC, {
     native_parser: true
 });
+
+const dbssService = require('./products-dbss.service');
+
+function fromDbssToSdc(dbss) {
+    const sdc = {};
+    let availableRates = dbss.characteristics ? dbss.characteristics.filter(function (c) {
+        return c.name == "InstallmentNumberFixed";
+    }) : [];
+    if (availableRates.length > 0) {
+        availableRates = availableRates[0].domain ? availableRates[0].domain.split("|") : [];
+    }
+
+    sdc._id = dbss._id;
+    sdc.name = dbss.displayName;
+    sdc.description = dbss.description;
+    sdc.longDescription = dbss.longDescription;
+    sdc.level = dbss.level;
+    sdc.parentIds = dbss.parentIds;
+    sdc.classe = dbss.class;
+    sdc.subclass = dbss.subClassType;
+    sdc.productType = dbss.productType;
+    sdc.channel = dbss.channel;
+    sdc.offerType = dbss.offerType;
+    sdc.cus = dbss.cus;
+    sdc.paymentMethod = dbss.paymentMethod;
+    sdc.nmu = dbss.NMU;
+    sdc.nmuPadre = dbss.NMUPadre;
+    sdc.marca = dbss.marca;
+    sdc.modello = dbss.modello;
+    sdc.price = dbss.prezzo;
+    sdc.isSellable = dbss.isSellable;
+    sdc.regalabile = dbss.regalabile;
+    sdc.offerName = dbss.ccOfferName;
+    sdc.availableRates = availableRates;
+    return sdc;
+}
+
+function fromDbssGetProductToSdc(dbss) {
+    const sdc = {};
+    sdc.name = dbss.productName;
+    sdc.nmu = dbss.nmu;
+    sdc.modello = dbss.modello;
+    sdc.nmuPadre = dbss.nmuParent;
+    sdc.marca = dbss.marca;
+    sdc.price = parseFloat(dbss.price || '0.0');
+    sdc.description = dbss.description;
+    sdc.longDescription = dbss.longDescription;
+    sdc.seniorityConstraint = dbss.seniorityConstraint ? dbss.seniorityConstraint.split("|") : [];
+    sdc.isSellable = dbss.isSellable == 'Y' ? true : false;
+    sdc.offerName = dbss.offerName;
+    sdc.defaultFlag = dbss.defaultFlag == 'Y' ? true : false;
+    sdc.parentDisplayName = dbss.parentDisplayName;
+    return sdc;
+}
 
 const repo = db.bind(repository);
 repo.bind({
     findAndUpdateById: function (id, update, callback) {
         return this.findOneAndUpdate({
-            _id: mongo.helper.toObjectID(id)
+            //_id: mongo.helper.toObjectID(id)
+            _id: id
         }, {
             $set: update
         }, {
@@ -30,14 +85,20 @@ var service = {};
 
 function initData() {
     // validation
+    // 0) prepare bootstrapData
+    bootstrapData.forEach(function (item) {
+        if (item._id) {
+            item._id = mongo.helper.toObjectID(item._id);
+        }
+    });
     const q = Q.defer();
     // 1) Drop collection Insert bootstrapData
     db[repository].drop(null, function (err) {
-        if (err) q.reject('Drop error');
+        if (err) console.log('Cannot Drop Repository', repository, err);
         // 2) inset mock data
         db[repository].insertMany(bootstrapData, function (err, res) {
-            if (err) q.reject('Init error');
-            else q.resolve(res.ops);
+            if (err) console.log('Init Error', repository, err);
+            q.resolve();
         });
     })
     return q.promise;
@@ -53,20 +114,61 @@ service.delete = _delete;
 module.exports = service;
 
 function getAll(filters) {
+    const tf = {};
+    let isDbss = false;
+    if (filters.level == "0") {
+        tf.level = "0";
+        tf.class = "OFFERTA";
+        tf.subClassType = "OFFERTA";
+    } else if (filters.level == "1") {
+        tf.level = "1";
+        tf.class = "SERVIZIO_ABILITANTE";
+    } else if (filters.level == "2") {
+        tf.level = "2";
+        tf.class = "ELEMENTO_ABILITATO";
+    } else if (filters.level == "3") {
+        tf.level = "3";
+        // TODO
+    } else if (filters.level == "4") {
+        tf.level = "4";
+        // TODO
+    } else {
+        // getProducts standard
+        isDbss = true;
+        tf.ProductName = filters.productName;
+        tf.ProductType = filters.productType;
+        tf.Channel = filters.channel;
+        tf.OfferType = filters.offerType;
+        tf.NMU = filters.nmu;
+        tf.NMUPadre = filters.nmuPadre;
+        tf.Marca = filters.marca;
+        tf.Modello = filters.modello;
+    }
+    if (filters.seniorityConstraint instanceof Array && filters.seniorityConstraint.length > 0) {
+        tf["seniorityConstraintList"] = [...filters.seniorityConstraint];
+    }
+    if (filters.parentId) {
+        tf.parentIds = [filters.parentId];
+    }
+
     const q = Q.defer();
-    db[repository].find(filters || {}).toArray(function (err, items) {
-        if (err) q.reject('Not Found');
-        else q.resolve(items);
-    });
+    dbssService.getAll(tf, isDbss)
+        .then(function (items) {
+            q.resolve(items.map(isDbss ? fromDbssGetProductToSdc : fromDbssToSdc));
+        })
+        .catch(function (err) {
+            q.reject(err);
+        });
     return q.promise;
 }
 
 function getById(_id) {
     const q = Q.defer();
-    db[repository].findById(_id, function (err, item) {
-        if (err) q.reject('Not Found');
-        else q.resolve(item);
-    })
+    dbssService.getById(_id).then(function (item) {
+        q.resolve(fromDbssToSdc(item));
+    }).catch(function (err) {
+        q.reject(err);
+    });
     return q.promise;
 }
 

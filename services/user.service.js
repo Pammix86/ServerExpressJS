@@ -1,16 +1,22 @@
 ﻿var config = require('config.json');
+
+const repository = 'users';
+/** dati di Mock */
+const bootstrapData = require('../mock/' + repository);
+
 var _ = require('lodash');
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
 var Q = require('q');
 var mongo = require('mongoskin');
-var db = mongo.db(config.connectionString, {
+var db = mongo.db(config.connectionStrings.SDC, {
     native_parser: true
 });
-db.bind('users');
+db.bind(repository);
 
 var service = {};
 
+service.init = initData;
 service.authenticate = authenticate;
 service.getAll = getAll;
 service.getById = getById;
@@ -19,6 +25,27 @@ service.update = update;
 service.delete = _delete;
 
 module.exports = service;
+
+function initData() {
+    // validation
+    // 0) prepare bootstrapData
+    bootstrapData.forEach(function (item) {
+        if (item._id) {
+            item._id = mongo.helper.toObjectID(item._id);
+        }
+    });
+    const q = Q.defer();
+    // 1) Drop collection Insert bootstrapData
+    db[repository].drop(null, function (err) {
+        if (err) console.log('Cannot Drop Repository', repository, err);
+        // 2) inset mock data
+        db[repository].insertMany(bootstrapData, function (err, res) {
+            if (err) console.log('Init Error', repository, err);
+            q.resolve();
+        });
+    })
+    return q.promise;
+}
 
 function authenticate(username, password) {
     var deferred = Q.defer();

@@ -1,16 +1,32 @@
-module.exports = [{
-        label: 'TIM CONNECT BASIC',
-        value: 'TIM CONNECT BASIC',
-        productId: '5aa8fa1086f67b4d840960b5'
+module.exports = [
+    {
+        "label": "ConnectBlack",
+        "value": "ConnectBlack",
+        "productId": "INTERNET_20_MEGA"
     },
     {
-        label: 'TIM CONNECT BLACK',
-        value: 'TIM CONNECT BLACK',
-        productId: '5aa8fa1086f67b4d840960b5'
+        "label": "ConnectGold",
+        "value": "ConnectGold",
+        "productId": "INTERNET_20_MEGA"
     },
     {
-        label: 'TIM CONNECT GOLD',
-        value: 'TIM CONNECT GOLD',
-        productId: '5aa8fa1086f67b4d840960b5'
+        "label": "ConnectBasic",
+        "value": "ConnectBasic",
+        "productId": "INTERNET_20_MEGA"
+    },
+    {
+        "label": "ConnectBlack",
+        "value": "ConnectBlack",
+        "productId": "TIM_CONNECT"
+    },
+    {
+        "label": "ConnectGold",
+        "value": "ConnectGold",
+        "productId": "TIM_CONNECT"
+    },
+    {
+        "label": "ConnectBasic",
+        "value": "ConnectBasic",
+        "productId": "TIM_CONNECT"
     }
 ];
