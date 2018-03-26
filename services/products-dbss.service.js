@@ -131,7 +131,9 @@ function getAll(filters, isDbss) {
 
 function getById(_id) {
     const q = Q.defer();
-    db[repository].findById(_id, function (err, item) {
+    db[repository].findOne({
+        _id: _id
+    }, function (err, item) {
         if (err) q.reject('Not Found');
         else q.resolve(item);
     })
