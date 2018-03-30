@@ -27,6 +27,31 @@ repo.bind({
 /** dati di Mock */
 const bootstrapData = require('../mock/products-dbss');
 
+/** MAPPERS */
+function fromSdcToDbssGetProduct(sdc, withLocal) {
+    if (!sdc) return null;
+    const sdcOrigin = withLocal ? sdc.originalProduct : sdc;
+    sdc.originalProduct = undefined;
+    const dbss = {};
+    dbss.productName = sdcOrigin.name;
+    dbss.nmu = sdcOrigin.nmu;
+    dbss.modello = sdcOrigin.modello;
+    dbss.nmuParent = sdcOrigin.nmuPadre;
+    dbss.marca = sdcOrigin.marca;
+    dbss.price = sdcOrigin.price;
+    dbss.description = sdcOrigin.description;
+    dbss.longDescription = sdcOrigin.longDescription;
+    dbss.seniorityConstraint = sdcOrigin.seniorityConstraint ? sdcOrigin.seniorityConstraint.join("|") : "";
+    dbss.isSellable = sdcOrigin.isWebSellable ? 'Y' : 'N';
+    dbss.offerName = sdcOrigin.offerName;
+    dbss.defaultFlag = sdcOrigin.defaultFlag ? 'Y' : 'N';
+    dbss.parentDisplayName = sdcOrigin.parentDisplayName;
+    if (withLocal) {
+        dbss.local = fromSdcToDbssGetProduct(sdc);
+    }
+    return dbss;
+}
+
 var service = {};
 
 function initData() {
@@ -61,7 +86,7 @@ module.exports = service;
 
 function getDateString(d) {
     const s = d.toISOString();
-    return s.replace(/(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)\..*/i, "$3/$2/$1 $4:$5:$6");
+    return s.replace(/(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)\..*/i, "$2/$3/$1 $4:$5:$6");
 }
 
 function getAll(filters, isDbss) {
@@ -82,14 +107,17 @@ function getAll(filters, isDbss) {
             url: config.dbssApiHostUrl + config.dbssApiBaseUrl + '/getProduct',
             method: 'POST',
             json: true,
-            body: JSON.stringify(body)
+            body: body //JSON.stringify(body)
         };
+        const curDate = new Date();
+        curDate.setDate(curDate.getDate() + 1);
         options.headers = {
+            "Content-Type": "application/json",
             "productType": filters.ProductType,
             "offerType": filters.OfferType,
             "channel": filters.Channel,
             "sourceSystem": config.dbssApiHeaders.sourceSystem,
-            "interactionDateTime": getDateString(new Date()),
+            "interactionDateTime": getDateString(curDate),
             "messageID": config.dbssApiHeaders.messageID,
             "transactionID": config.dbssApiHeaders.transactionID,
             "businessID": config.dbssApiHeaders.businessID,
@@ -156,13 +184,41 @@ function create(item) {
 
 function update(_id, item) {
     const q = Q.defer();
-    delete item._id;
-    db[repository].findAndUpdateById(_id, item,
-        function (err, res) {
-            if (err) q.reject('Error');
-            else q.resolve(res.value);
+    // proceed with update
+    const prod = fromSdcToDbssGetProduct(item, true);
+    const body = {
+        "bodyRequestSetProduct": {
+            "ProductInfo": prod
         }
-    );
+    };
+    const options = {
+        url: config.dbssApiHostUrl + config.dbssApiBaseUrl + '/setProduct',
+        method: 'POST',
+        json: true,
+        body: body //JSON.stringify(body)
+    };
+    const curDate = new Date();
+    curDate.setDate(curDate.getDate() + 1);
+    options.headers = {
+        "Content-Type": "application/json",
+        "productType": item.productType,
+        "offerType": item.offerType,
+        "channel": item.channel,
+        "sourceSystem": config.dbssApiHeaders.sourceSystem,
+        "interactionDateTime": getDateString(curDate),
+        "messageID": config.dbssApiHeaders.messageID,
+        "transactionID": config.dbssApiHeaders.transactionID,
+        "businessID": config.dbssApiHeaders.businessID,
+    };
+    HttpRequest(options, function (err, resp, body) {
+        if (err || body.bodyResponse.Result.Result != "OK") {
+            q.reject(err || body.bodyResponse.Result.Error.map(function (e) {
+                return e.Description;
+            }).join(" ; "));
+        } else {
+            q.resolve(prod);
+        }
+    });
     return q.promise;
 }
 

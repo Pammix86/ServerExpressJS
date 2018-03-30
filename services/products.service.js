@@ -46,21 +46,27 @@ function fromDbssToSdc(dbss) {
     return sdc;
 }
 
-function fromDbssGetProductToSdc(dbss) {
+function fromDbssGetProductToSdc(_dbss, productType, offerType, channel, setOriginal) {
     const sdc = {};
+    const dbss = setOriginal ? _dbss.local : _dbss;
+    sdc._id = dbss.productName;
     sdc.name = dbss.productName;
     sdc.nmu = dbss.nmu;
     sdc.modello = dbss.modello;
     sdc.nmuPadre = dbss.nmuParent;
     sdc.marca = dbss.marca;
-    sdc.price = parseFloat(dbss.price || '0.0');
+    sdc.price = dbss.price;
+    sdc.productType = productType;
+    sdc.channel = channel;
+    sdc.offerType = offerType;
     sdc.description = dbss.description;
     sdc.longDescription = dbss.longDescription;
     sdc.seniorityConstraint = dbss.seniorityConstraint ? dbss.seniorityConstraint.split("|") : [];
-    sdc.isSellable = dbss.isSellable == 'Y' ? true : false;
+    sdc.isWebSellable = dbss.isSellable && dbss.isSellable == 'Y' ? true : false;
     sdc.offerName = dbss.offerName;
-    sdc.defaultFlag = dbss.defaultFlag == 'Y' ? true : false;
+    sdc.defaultFlag = dbss.defaultFlag && dbss.defaultFlag == 'Y' ? true : false;
     sdc.parentDisplayName = dbss.parentDisplayName;
+    if (setOriginal) sdc.originalProduct = fromDbssGetProductToSdc(_dbss, productType, offerType, channel);
     return sdc;
 }
 
@@ -113,6 +119,14 @@ service.delete = _delete;
 
 module.exports = service;
 
+const productTypes = {
+    'Bene Fisico': 'BF',
+    'Carta Servizi': 'CS',
+    'SIM': 'SIM',
+    'Ricarica': 'Ricarica',
+    'All': 'ALL'
+};
+
 function getAll(filters) {
     const tf = {};
     let isDbss = false;
@@ -136,9 +150,9 @@ function getAll(filters) {
         // getProducts standard
         isDbss = true;
         tf.ProductName = filters.productName;
-        tf.ProductType = filters.productType;
-        tf.Channel = filters.channel;
-        tf.OfferType = filters.offerType;
+        tf.ProductType = filters.productType ? productTypes[filters.productType] || undefined : undefined;
+        tf.Channel = (filters.channel || '').toUpperCase();
+        tf.OfferType = (filters.offerType || '').toUpperCase();
         tf.NMU = filters.nmu;
         tf.NMUPadre = filters.nmuPadre;
         tf.Marca = filters.marca;
@@ -154,7 +168,10 @@ function getAll(filters) {
     const q = Q.defer();
     dbssService.getAll(tf, isDbss)
         .then(function (items) {
-            q.resolve(items.map(isDbss ? fromDbssGetProductToSdc : fromDbssToSdc));
+            q.resolve(items.map(function (o) {
+                if (isDbss) return fromDbssGetProductToSdc(o, tf.ProductType, tf.OfferType, tf.Channel, true);
+                else return fromDbssToSdc(o);
+            }))
         })
         .catch(function (err) {
             q.reject(err);
@@ -189,12 +206,13 @@ function create(item) {
 function update(_id, item) {
     const q = Q.defer();
     delete item._id;
-    db[repository].findAndUpdateById(_id, item,
-        function (err, res) {
-            if (err) q.reject('Error');
-            else q.resolve(res.value);
-        }
-    );
+    dbssService.update(_id, item)
+        .then(function (_item) {
+            q.resolve(fromDbssGetProductToSdc(_item, item.productType, item.offerType, item.channel, true));
+        })
+        .catch(function (err) {
+            q.reject(err);
+        });
     return q.promise;
 }
 
