@@ -42,7 +42,7 @@ function fromSdcToDbssGetProduct(sdc, withLocal) {
     dbss.description = sdcOrigin.description;
     dbss.longDescription = sdcOrigin.longDescription;
     dbss.seniorityConstraint = sdcOrigin.seniorityConstraint ? sdcOrigin.seniorityConstraint.join("|") : "";
-    dbss.isSellable = sdcOrigin.isWebSellable ? 'Y' : 'N';
+    dbss.isSellable = sdcOrigin.isSellable ? 'Y' : 'N';
     dbss.offerName = sdcOrigin.offerName;
     dbss.defaultFlag = sdcOrigin.defaultFlag ? 'Y' : 'N';
     dbss.parentDisplayName = sdcOrigin.parentDisplayName;

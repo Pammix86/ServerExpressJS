@@ -77,6 +77,8 @@ function getById(_id) {
 }
 
 function create(item) {
+    const curDate = new Date();
+    item.createdOn = curDate.toISOString();
     delete item['_id'];
     const q = Q.defer();
     db[repository].insert(item, function (err, res) {
@@ -91,6 +93,8 @@ function create(item) {
 }
 
 function update(_id, item) {
+    const curDate = new Date();
+    item.createdOn = curDate.toISOString();
     const q = Q.defer();
     delete item._id;
     db[repository].findAndUpdateById(_id, item,
