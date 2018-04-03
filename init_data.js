@@ -19,13 +19,15 @@ function iterate(children, products, level, parentId, packages) {
             product["seniorityConstraintList"] = product["SeniorityConstraint"].split("|");
         } else product["seniorityConstraintList"] = [];
         // packages
-        let packs = product.characteristics ? product.characteristics.filter(function (c) {
-            return c.name == "package";
-        }) : [];
-        if (packs.length > 0 && packs[0].value) {
-            packs[0].value.split("|").forEach(function (pack) {
-                packages[pack] = true;
-            });
+        if (level == 2) {
+            let packs = product.characteristics ? product.characteristics.filter(function (c) {
+                return c.name == "package";
+            }) : [];
+            if (packs.length > 0 && packs[0].value) {
+                packs[0].value.split("|").forEach(function (pack) {
+                    packages[pack] = true;
+                });
+            }
         }
         if (product.id) {
             product['_id'] = product.id;

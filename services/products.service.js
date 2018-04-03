@@ -63,6 +63,7 @@ function fromDbssGetProductToSdc(_dbss, productType, offerType, channel, setOrig
     sdc.longDescription = dbss.longDescription;
     sdc.seniorityConstraint = dbss.seniorityConstraint ? dbss.seniorityConstraint.split("|") : [];
     sdc.isWebSellable = dbss.isSellable && dbss.isSellable == 'Y' ? true : false;
+    sdc.isSellable = sdc.isWebSellable;
     sdc.offerName = dbss.offerName;
     sdc.defaultFlag = dbss.defaultFlag && dbss.defaultFlag == 'Y' ? true : false;
     sdc.parentDisplayName = dbss.parentDisplayName;
@@ -163,6 +164,11 @@ function getAll(filters) {
     }
     if (filters.parentId) {
         tf.parentIds = [filters.parentId];
+    }
+    if (!isDbss) {
+        if (filters.offerType) tf.offerType = filters.offerType;
+        if (filters.class) tf.class = filters.class;
+        if (filters.subclass) tf.subclass = filters.subclass;
     }
 
     const q = Q.defer();
