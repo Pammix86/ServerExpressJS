@@ -81,8 +81,9 @@ function create(item) {
 
 function update(_id, item) {
     const q = Q.defer();
-    item._id = _id;
+    delete item._id;
     db[repository].updateById(_id, item, function (err) {
+        item._id = _id;
         if (err) q.reject('Error');
         else q.resolve(item);
     })
