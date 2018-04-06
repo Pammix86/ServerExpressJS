@@ -46,28 +46,28 @@ function fromDbssToSdc(dbss) {
     return sdc;
 }
 
-function fromDbssGetProductToSdc(_dbss, productType, offerType, channel, setOriginal) {
+function fromDbssGetProductToSdc(dbss, productType, offerType, channel) {
     const sdc = {};
-    const dbss = setOriginal ? _dbss.local : _dbss;
-    sdc._id = dbss.productName;
-    sdc.name = dbss.productName;
-    sdc.nmu = dbss.nmu;
-    sdc.modello = dbss.modello;
-    sdc.nmuPadre = dbss.nmuParent;
-    sdc.marca = dbss.marca;
-    sdc.price = dbss.price;
-    sdc.productType = productType;
-    sdc.channel = channel;
-    sdc.offerType = offerType;
-    sdc.description = dbss.description;
-    sdc.longDescription = dbss.longDescription;
-    sdc.seniorityConstraint = dbss.seniorityConstraint ? dbss.seniorityConstraint.split("|") : [];
-    sdc.isWebSellable = dbss.isSellable && dbss.isSellable == 'Y' ? true : false;
-    sdc.isSellable = sdc.isWebSellable;
-    sdc.offerName = dbss.offerName;
-    sdc.defaultFlag = dbss.defaultFlag && dbss.defaultFlag == 'Y' ? true : false;
-    sdc.parentDisplayName = dbss.parentDisplayName;
-    if (setOriginal) sdc.originalProduct = fromDbssGetProductToSdc(_dbss, productType, offerType, channel);
+    if (dbss) {
+        sdc._id = dbss.productName;
+        sdc.name = dbss.productName;
+        sdc.nmu = dbss.nmu;
+        sdc.modello = dbss.modello;
+        sdc.nmuPadre = dbss.nmuParent;
+        sdc.marca = dbss.marca;
+        sdc.price = dbss.price;
+        sdc.productType = productType;
+        sdc.channel = channel;
+        sdc.offerType = offerType;
+        sdc.description = dbss.description;
+        sdc.longDescription = dbss.longDescription;
+        sdc.seniorityConstraint = dbss.seniorityConstraint ? dbss.seniorityConstraint.split("|") : [];
+        sdc.isWebSellable = dbss.isSellable && dbss.isSellable == 'Y' ? true : false;
+        sdc.isSellable = sdc.isWebSellable;
+        sdc.offerName = dbss.offerName;
+        sdc.defaultFlag = dbss.defaultFlag && dbss.defaultFlag == 'Y' ? true : false;
+        sdc.parentDisplayName = dbss.parentDisplayName;
+    }
     return sdc;
 }
 
@@ -175,8 +175,17 @@ function getAll(filters) {
     dbssService.getAll(tf, isDbss)
         .then(function (items) {
             q.resolve(items.map(function (o) {
-                if (isDbss) return fromDbssGetProductToSdc(o, tf.ProductType, tf.OfferType, tf.Channel, true);
-                else return fromDbssToSdc(o);
+                if (isDbss) {
+                    if (o.local) {
+                        const _o = fromDbssGetProductToSdc(o.local, tf.ProductType, tf.OfferType, tf.Channel);
+                        _o.originalProduct = fromDbssGetProductToSdc(o, tf.ProductType, tf.OfferType, tf.Channel);
+                        return _o;
+                    } else {
+                        const _o = fromDbssGetProductToSdc(o, tf.ProductType, tf.OfferType, tf.Channel);
+                        _o.originalProduct = fromDbssGetProductToSdc(o, tf.ProductType, tf.OfferType, tf.Channel);
+                        return _o;
+                    }
+                } else return fromDbssToSdc(o);
             }))
         })
         .catch(function (err) {
@@ -214,7 +223,15 @@ function update(_id, item) {
     delete item._id;
     dbssService.update(_id, item)
         .then(function (_item) {
-            q.resolve(fromDbssGetProductToSdc(_item, item.productType, item.offerType, item.channel, true));
+            if (o.local) {
+                const _o = fromDbssGetProductToSdc(o.local, tf.ProductType, tf.OfferType, tf.Channel);
+                _o.originalProduct = fromDbssGetProductToSdc(o, tf.ProductType, tf.OfferType, tf.Channel);
+                q.resolve(_o);
+            } else {
+                const _o = fromDbssGetProductToSdc(o, tf.ProductType, tf.OfferType, tf.Channel);
+                _o.originalProduct = fromDbssGetProductToSdc(o, tf.ProductType, tf.OfferType, tf.Channel);
+                q.resolve(_o);
+            }
         })
         .catch(function (err) {
             q.reject(err);
