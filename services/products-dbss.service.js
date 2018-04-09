@@ -28,26 +28,22 @@ repo.bind({
 const bootstrapData = require('../mock/products-dbss');
 
 /** MAPPERS */
-function fromSdcToDbssGetProduct(sdc, withLocal) {
-    if (!sdc) return null;
-    const sdcOrigin = withLocal ? sdc.originalProduct : sdc;
-    sdc.originalProduct = undefined;
+function fromSdcToDbssGetProduct(sdc) {
     const dbss = {};
-    dbss.productName = sdcOrigin.name;
-    dbss.nmu = sdcOrigin.nmu;
-    dbss.modello = sdcOrigin.modello;
-    dbss.nmuParent = sdcOrigin.nmuPadre;
-    dbss.marca = sdcOrigin.marca;
-    dbss.price = sdcOrigin.price;
-    dbss.description = sdcOrigin.description;
-    dbss.longDescription = sdcOrigin.longDescription;
-    dbss.seniorityConstraint = sdcOrigin.seniorityConstraint ? sdcOrigin.seniorityConstraint.join("|") : "";
-    dbss.isSellable = sdcOrigin.isSellable ? 'Y' : 'N';
-    dbss.offerName = sdcOrigin.offerName;
-    dbss.defaultFlag = sdcOrigin.defaultFlag ? 'Y' : 'N';
-    dbss.parentDisplayName = sdcOrigin.parentDisplayName;
-    if (withLocal) {
-        dbss.local = fromSdcToDbssGetProduct(sdc);
+    if (sdc) {
+        dbss.productName = sdc.name;
+        dbss.nmu = sdc.nmu;
+        dbss.modello = sdc.modello;
+        dbss.nmuParent = sdc.nmuPadre;
+        dbss.marca = sdc.marca;
+        dbss.price = sdc.price;
+        dbss.description = sdc.description;
+        dbss.longDescription = sdc.longDescription;
+        dbss.seniorityConstraint = sdc.seniorityConstraint ? sdc.seniorityConstraint.join("|") : "";
+        dbss.isSellable = sdc.isSellable ? 'Y' : 'N';
+        dbss.offerName = sdc.offerName;
+        dbss.defaultFlag = sdc.defaultFlag ? 'Y' : 'N';
+        dbss.parentDisplayName = sdc.parentDisplayName;
     }
     return dbss;
 }
@@ -185,7 +181,8 @@ function create(item) {
 function update(_id, item) {
     const q = Q.defer();
     // proceed with update
-    const prod = fromSdcToDbssGetProduct(item, true);
+    const prod = fromSdcToDbssGetProduct(item.originalProduct);
+    prod.local = fromSdcToDbssGetProduct(item);
     const body = {
         "bodyRequestSetProduct": {
             "ProductInfo": prod

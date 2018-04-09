@@ -27,7 +27,7 @@ app.use(expressJwt({
     secret: config.secret,
     getToken: jwtGetTokenCallback
 }).unless({
-    path: ['/login', '/sign-up', '/logout', '/users']
+    path: ['/login', '/sign-up', '/logout', '/users', '/check-status']
 }));
 
 // routes
@@ -42,7 +42,8 @@ app.use(expressJwt({
 
 // Add routes dinamically
 const skipRoutes = {
-    'authentication': ''
+    'authentication': '',
+    'maintainance': ''
 }
 fs.readdirSync('./controllers').forEach(file => {
     const controllerRoute = file.split('.')[0];
