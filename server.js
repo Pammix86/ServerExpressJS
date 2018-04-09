@@ -27,7 +27,7 @@ app.use(expressJwt({
     secret: config.secret,
     getToken: jwtGetTokenCallback
 }).unless({
-    path: ['/login', '/sign-up', '/logout', '/users']
+    path: ['/login', '/sign-up', '/logout', '/users', '/check-status']
 }));
 
 // routes
