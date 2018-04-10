@@ -149,15 +149,15 @@ function getAll(filters) {
         // TODO
     } else {
         // getProducts standard
-        isDbss = true;
-        tf.ProductName = filters.productName;
-        tf.ProductType = filters.productType ? productTypes[filters.productType] || undefined : undefined;
-        tf.Channel = (filters.channel || '').toUpperCase();
-        tf.OfferType = (filters.offerType || '').toUpperCase();
-        tf.NMU = filters.nmu;
-        tf.NMUPadre = filters.nmuPadre;
-        tf.Marca = filters.marca;
-        tf.Modello = filters.modello;
+        // isDbss = true;
+        // tf.ProductName = filters.productName;
+        // tf.ProductType = filters.productType ? productTypes[filters.productType] || undefined : undefined;
+        // tf.Channel = (filters.channel || '').toUpperCase();
+        // tf.OfferType = (filters.offerType || '').toUpperCase();
+        // tf.NMU = filters.nmu;
+        // tf.NMUPadre = filters.nmuPadre;
+        // tf.Marca = filters.marca;
+        // tf.Modello = filters.modello;
     }
     if (filters.seniorityConstraint instanceof Array && filters.seniorityConstraint.length > 0) {
         tf["seniorityConstraintList"] = [...filters.seniorityConstraint];
