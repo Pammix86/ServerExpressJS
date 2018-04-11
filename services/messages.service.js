@@ -66,13 +66,13 @@ function getById(_id) {
 }
 
 function create(item) {
-    delete item['_id'];
     const q = Q.defer();
     db[repository].insert(item, function (err, res) {
-        console.log('meta offer insert', arguments);
         if (err || res.insertedCount == 0) q.reject('Error');
         else {
-            item._id = res.insertedIds[0];
+            if (!item._id) {
+                item._id = res.insertedIds[0];
+            }
             q.resolve(item);
         }
     });
